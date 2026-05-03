@@ -1,6 +1,6 @@
+use crate::models::request::{Auth, Meta};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::models::request::{Auth, Meta};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Collection {
@@ -12,4 +12,3 @@ pub struct Collection {
     pub order: Option<Vec<String>>,
     pub meta: Option<Meta>,
 }
-

@@ -34,9 +34,18 @@ pub enum HttpMethod {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Auth {
     None,
-    Basic { username: String, password: String },
-    Bearer { token: String },
-    ApiKey { key: String, value: String, location: ApiKeyLocation },
+    Basic {
+        username: String,
+        password: String,
+    },
+    Bearer {
+        token: String,
+    },
+    ApiKey {
+        key: String,
+        value: String,
+        location: ApiKeyLocation,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -92,4 +101,3 @@ pub struct Meta {
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
 }
-

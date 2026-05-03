@@ -22,4 +22,3 @@ pub struct Meta {
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
 }
-
