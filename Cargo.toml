@@ -2,6 +2,8 @@
 name = "torpor"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tfuent1/torpor"
 
 [dependencies]
 ratatui = "0.29"
@@ -13,3 +15,18 @@ serde_yaml = "0.9"
 keyring = "3"
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
+[lints.rust]
+unused_imports = "warn"
+dead_code      = "warn"
+
+[lints.clippy]
+all      = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+# module_name_repetitions: intentional — BundleError, StoreError, etc. are the
+# correct names at FFI boundaries and in error documentation. Keep allowed.
+module_name_repetitions = "allow"
+
+# must_use_candidate: Clippy applies this too broadly across a protocol library.
+# Add #[must_use] manually where it genuinely matters (crypto, signing).
+must_use_candidate      = "allow"
