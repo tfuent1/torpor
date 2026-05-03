@@ -29,8 +29,10 @@ allow = [
     "MIT",
     "Apache-2.0",
     "Unicode-3.0",
-    "BSD-2-Clause",
     "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
 
@@ -49,9 +51,7 @@ deny = [
     { crate = "openssl", reason = "Pure-Rust crypto only. Use rustls or a crate with a rustls backend instead." },
     { crate = "native-tls", reason = "Pure-Rust crypto only. Configure reqwest with rustls-tls feature." },
 ]
-skip = [
-    { crate = "getrandom@0.2.17", reason = "rand 0.8 requires getrandom 0.2; resolves when deps upgrade." },
-]
+skip = []
 skip-tree = []
 
 [sources]
