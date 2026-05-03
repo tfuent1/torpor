@@ -82,10 +82,10 @@ jobs:
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate coverage report
-        run: cargo llvm-cov --package ripple-core --html --output-dir coverage/
+        run: cargo llvm-cov --package torpor --html --output-dir coverage/
 
       - name: Print coverage summary
-        run: cargo llvm-cov --package ripple-core
+        run: cargo llvm-cov --package torpor
 
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v6
