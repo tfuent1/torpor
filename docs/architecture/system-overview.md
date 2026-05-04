@@ -67,7 +67,7 @@ TUI Re-render
 | Terminal backend | crossterm | Cross-platform, works on Linux/macOS |
 | HTTP client | reqwest | Async, feature-complete, widely used |
 | TLS | rustls | Pure Rust, no system OpenSSL dependency |
-| Serialization | serde + serde_yaml | Idiomatic Rust, YAML support |
+| Serialization | serde + serde_saphyr + serde_json | Idiomatic Rust, YAML support |
 | Database | sqlx + SQLite | Async, compile-time checked queries, embedded |
 | Secret storage | keyring | Cross-platform system keyring abstraction |
 | Error handling | anyhow | Ergonomic error propagation at application layer |
