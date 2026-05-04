@@ -19,7 +19,7 @@ Torpor stores workspaces, collections, environments, and requests as files on di
 - Multiline strings are clean using block scalar syntax (`|`)
 - Deeply nested structures read naturally
 - Indent-sensitive — subtle bugs possible when editing manually
-- `serde_yaml` handles parsing robustly
+- `serde_saphyr` handles parsing robustly
 
 ### Custom Format (Hurl-style)
 - Purpose-built for HTTP requests, very clean to read
