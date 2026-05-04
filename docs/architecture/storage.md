@@ -35,7 +35,7 @@ my-project/
 
 ### Read/Write
 
-The `src/storage/` module provides `load` and `save` functions for each model type. All functions return `anyhow::Result` and use `serde_yaml` for serialization.
+The `src/storage/` module provides `load` and `save` functions for each model type. All functions return `anyhow::Result` and use `serde_saphyr`/`serde_json` for serialization.
 
 Files are written atomically where possible — write to a temp file, then rename — to avoid corrupting a collection file mid-write.
 
