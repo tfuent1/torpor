@@ -8,18 +8,18 @@ The Torpor TUI is divided into three main regions: a sidebar for navigation, a m
 
 ```
 ┌──────────────┬─────────────────────────────────────┐
-│              │  Method  URL                [Send]   │
+│              │  Method  URL                [Send]  │
 │  Sidebar     ├─────────────────────────────────────┤
-│              │  Headers │ Body │ Auth │ Params      │
+│              │  Headers │ Body │ Auth │ Params     │
 │  Workspaces  ├─────────────────────────────────────┤
 │  Collections │                                     │
-│  Requests    │         Request Editor               │
+│  Requests    │         Request Editor              │
 │              │                                     │
 │              ├─────────────────────────────────────┤
-│              │  Status  Time  Size                  │
+│              │  Status  Time  Size                 │
 │              ├─────────────────────────────────────┤
 │              │                                     │
-│              │         Response Viewer              │
+│              │         Response Viewer             │
 │              │                                     │
 ├──────────────┴─────────────────────────────────────┤
 │  [ENV: dev]  workspace/collection/request   [?]    │

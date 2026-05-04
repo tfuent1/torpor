@@ -6,21 +6,21 @@ Torpor is a single-binary TUI application. There is no daemon, no background pro
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                   Torpor Binary                  │
-│                                                  │
+│                   Torpor Binary                 │
+│                                                 │
 │  ┌─────────────┐        ┌─────────────────────┐ │
-│  │  TUI Layer  │◄──────►│   App State / Store  │ │
+│  │  TUI Layer  │◄──────►│  App State / Store  │ │
 │  │  (Ratatui)  │        │                     │ │
 │  └─────────────┘        └──────────┬──────────┘ │
-│                                    │             │
-│              ┌─────────────────────┼──────────┐  │
-│              │                     │          │  │
-│     ┌────────▼──────┐   ┌──────────▼───────┐  │  │
-│     │ Storage Layer │   │  Request Engine  │  │  │
-│     │  YAML + SQLite│   │    (reqwest)     │  │  │
-│     └───────────────┘   └──────────────────┘  │  │
-│                                                │  │
-└────────────────────────────────────────────────┘  │
+│                                    │            │
+│              ┌─────────────────────┼            │
+│              │                     │            │
+│     ┌────────▼──────┐   ┌──────────▼───────┐    │
+│     │ Storage Layer │   │  Request Engine  │    │
+│     │  YAML + SQLite│   │    (reqwest)     │    │
+│     └───────────────┘   └──────────────────┘    │
+│                                                 │
+└─────────────────────────────────────────────────┘
 ```
 
 ## Key Components
@@ -64,10 +64,10 @@ TUI Re-render
 | Concern | Choice | Rationale |
 |---|---|---|
 | TUI framework | Ratatui | Most mature Rust TUI library |
-| Terminal backend | crossterm | Cross-platform, works on Linux/macOS |
+| Terminal backend | crossterm | Cross-platform, works on Linux/macOS/Windows |
 | HTTP client | reqwest | Async, feature-complete, widely used |
 | TLS | rustls | Pure Rust, no system OpenSSL dependency |
-| Serialization | serde + serde_yaml | Idiomatic Rust, YAML support |
+| Serialization | serde + serde_saphyr + serde_json | Idiomatic Rust, YAML support |
 | Database | sqlx + SQLite | Async, compile-time checked queries, embedded |
 | Secret storage | keyring | Cross-platform system keyring abstraction |
 | Error handling | anyhow | Ergonomic error propagation at application layer |

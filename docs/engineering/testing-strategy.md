@@ -51,7 +51,7 @@ Integration tests may use the filesystem (via `tempfile` for temp directories) b
 ## What Not to Test
 
 - The TUI rendering layer — Ratatui components are difficult to unit test and the value is low. Focus testing on the business logic that feeds the TUI.
-- Third-party library behaviour — do not test that `serde_yaml` serializes correctly. Test that your own types serialize to the expected YAML structure.
+- Third-party library behaviour — do not test that `serde_saphyr` serializes correctly. Test that your own types serialize to the expected YAML structure.
 
 ## Coverage
 
