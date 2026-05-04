@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -77,7 +78,7 @@ pub struct Assertion {
     pub header: Option<String>,
     pub contains: Option<String>,
     pub json: Option<String>,
-    pub equals: Option<serde_yaml::Value>,
+    pub equals: Option<Value>,
     pub exists: Option<bool>,
     pub response_time_ms: Option<ResponseTimeAssertion>,
 }

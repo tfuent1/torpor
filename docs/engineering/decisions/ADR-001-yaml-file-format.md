@@ -58,6 +58,12 @@ TOML would be the right choice for a configuration file. For a file that primari
 
 ## Consequences
 
-- `serde_yaml` is marked as deprecated by its maintainer. This is a known risk. The deprecation is primarily due to the maintainer's concerns about the `unsafe-libyaml` dependency. An alternative (`serde_yml`) exists and can be evaluated if `serde_yaml` becomes unmaintained. The migration cost would be low.
-- YAML's indent sensitivity means hand-edited files can silently misbehave. Good error messages on parse failure mitigate this.
-- Developers unfamiliar with YAML have a minor learning curve, but YAML is sufficiently ubiquitous that this is not a meaningful barrier.
+- `serde-saphyr` is used for YAML serialization. It is built on the `saphyr` parser,
+  a pure-Rust YAML 1.2 compliant implementation and the maintained successor to
+  `yaml-rust`. The original `serde_yaml` crate was deprecated in March 2024 due to
+  maintainer concerns about the `unsafe-libyaml` C dependency; `serde-saphyr` resolves
+  this with an idiomatic Rust parser and no unsafe code in the parsing layer.
+- YAML's indent sensitivity means hand-edited files can silently misbehave. Good error
+  messages on parse failure mitigate this.
+- Developers unfamiliar with YAML have a minor learning curve, but YAML is sufficiently
+  ubiquitous that this is not a meaningful barrier.
