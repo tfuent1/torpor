@@ -64,7 +64,7 @@ TUI Re-render
 | Concern | Choice | Rationale |
 |---|---|---|
 | TUI framework | Ratatui | Most mature Rust TUI library |
-| Terminal backend | crossterm | Cross-platform, works on Linux/macOS |
+| Terminal backend | crossterm | Cross-platform, works on Linux/macOS/Windows |
 | HTTP client | reqwest | Async, feature-complete, widely used |
 | TLS | rustls | Pure Rust, no system OpenSSL dependency |
 | Serialization | serde + serde_saphyr + serde_json | Idiomatic Rust, YAML support |
