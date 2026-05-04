@@ -1,1 +1,74 @@
 # torpor
+
+A lightweight TUI-based REST API client for the terminal, written in Rust.
+
+Torpor is a keyboard-driven alternative to Insomnia and Postman. No Electron,
+no cloud sync, no subscription. Just a single binary that sends HTTP requests
+and gets out of your way.
+
+## Why
+
+Insomnia and Postman are built on Electron and consume 300–600MB of RAM at
+idle. For developers who live in the terminal, that's an unreasonable trade-off
+for a tool that fundamentally just sends HTTP requests.
+
+Torpor aims to deliver the core workflows developers actually use — persistent
+collections, environment variable management, request chaining, and assertions
+— in a single compiled binary with a fraction of the memory footprint.
+
+## Status
+
+Early development. Phase 1 (basic request/response loop) is in progress.
+Not yet usable as a daily driver.
+
+See the [roadmap](docs/vision/roadmap.md) for what's planned.
+
+## Features (planned)
+
+- Send HTTP requests from a keyboard-driven TUI
+- Save and organise requests as plain YAML files — git-friendly by design
+- Multiple environments (dev, staging, prod) with a single keybind to switch
+- Secrets stored in the system keyring, never committed to version control
+- Assert on status codes, response times, headers, and JSON fields
+- Chain requests — extract values from responses and use them in subsequent requests
+- Single binary, no runtime dependencies
+
+## Installation
+
+Not yet published. Build from source:
+
+```bash
+git clone git@github.com:tfuent1/torpor.git
+cd torpor
+cargo build --release
+./target/release/torpor
+```
+
+## Documentation
+
+Full documentation lives in [`docs/`](docs/README.md).
+
+- [Problem Statement](docs/vision/problem-statement.md)
+- [Roadmap](docs/vision/roadmap.md)
+- [Architecture Overview](docs/architecture/system-overview.md)
+- [Contributing](docs/engineering/contributing.md)
+
+## Contributing
+
+See [docs/engineering/contributing.md](docs/engineering/contributing.md) for
+setup instructions, code standards, and how to open a pull request.
+
+## License
+
+Licensed under either of MIT or Apache-2.0 at your option.
+
+## AI Assistance
+
+This project is developed with the assistance of AI tools, primarily
+[Claude](https://claude.ai) by Anthropic. AI is used for architecture
+discussion, code review, documentation, and pair programming.
+
+Claude has no write access to this repository. All code and content is
+reviewed and committed by the human author. AI-generated suggestions may
+be used as-is, modified, or rejected — but nothing reaches the repository
+without human review and approval.
