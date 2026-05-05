@@ -270,7 +270,7 @@ fn render_response_pane(frame: &mut Frame, state: &AppState, area: ratatui::layo
 
         let mut lines = vec![status_line, Line::raw("")];
         lines.extend(highlight_json(&response.body));
-        Paragraph::new(lines).block(block)
+        Paragraph::new(lines).block(block).scroll((state.response_scroll, 0))
     } else {
         Paragraph::new("No response yet")
             .style(Style::default().fg(Color::DarkGray))
@@ -310,7 +310,7 @@ fn colorize_json_line(line: &str) -> Line<'static> {
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),
         ));
-        spans.push(Span::raw(" "));
+    spans.push(Span::raw(" "));
         spans.extend(colorize_value(rest));
         return Line::from(spans);
     }
@@ -363,7 +363,7 @@ fn render_status_bar(frame: &mut Frame, state: &AppState, area: ratatui::layout:
                 }
             }
             Focus::RequestPane => " ←→ switch tab  tab focus  ctrl+r send  ctrl+s save  ctrl+o load  ctrl+q quit".to_string(),
-            Focus::ResponsePane => " tab focus  ctrl+r send  ctrl+s save  ctrl+o load  q/ctrl+q quit".to_string(),
+            Focus::ResponsePane => " j/k scroll  tab focus  ctrl+r send  ctrl+s save  ctrl+o load  q/ctrl+q quit".to_string(),
         }
     };
 

@@ -60,6 +60,7 @@ fn run(
             match result {
                 Ok(response) => {
                     state.response = Some(response);
+                    state.response_scroll = 0;
                     state.status_message = None;
                 }
                 Err(e) => {
@@ -88,6 +89,20 @@ fn run(
                     break;
                 }
                 (KeyModifiers::CONTROL, KeyCode::Char('q')) => break,
+
+                // Down
+                (KeyModifiers::NONE, KeyCode::Char('j'))
+                    if state.focus == Focus::ResponsePane =>
+                {
+                    state.response_scroll = state.response_scroll.saturating_add(1);
+                }
+
+                // Up
+                (KeyModifiers::NONE, KeyCode::Char('k'))
+                    if state.focus == Focus::ResponsePane =>
+                {
+                    state.response_scroll = state.response_scroll.saturating_sub(1);
+                }
 
                 // Send — Ctrl+R (Ctrl+Enter is unreliable in most terminals)
                 (KeyModifiers::CONTROL, KeyCode::Char('r')) => handle_send(state, engine),

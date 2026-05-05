@@ -57,6 +57,7 @@ pub struct AppState {
     pub status_message: Option<String>,
     pub request_in_flight: bool,
     pub cursor_pos: usize,
+    pub response_scroll: u16,
 
     // Headers editor state
     pub header_selected: usize, // which row is selected (0-indexed)
@@ -81,6 +82,7 @@ impl AppState {
             status_message: None,
             request_in_flight: false,
             cursor_pos: 0,
+            response_scroll: 0,
             header_selected: 0,
             header_editing: None,
             header_edit_buf: String::new(),
