@@ -310,7 +310,7 @@ fn colorize_json_line(line: &str) -> Line<'static> {
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),
         ));
-        spans.push(Span::raw(": "));
+        spans.push(Span::raw(" "));
         spans.extend(colorize_value(rest));
         return Line::from(spans);
     }
