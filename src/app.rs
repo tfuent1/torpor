@@ -29,6 +29,13 @@ pub enum RequestTab {
     Body,
 }
 
+/// Which field is being edited in the headers editor.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HeaderField {
+    Key,
+    Value,
+}
+
 /// Central application state. The TUI reads from this; all mutations go through it.
 pub struct AppState {
     // Request being built
@@ -50,6 +57,11 @@ pub struct AppState {
     pub status_message: Option<String>,
     pub request_in_flight: bool,
     pub cursor_pos: usize,
+
+    // Headers editor state
+    pub header_selected: usize, // which row is selected (0-indexed)
+    pub header_editing: Option<HeaderField>, // None = navigating, Some = editing
+    pub header_edit_buf: String, // buffer for the field being typed into
 }
 
 impl AppState {
@@ -69,6 +81,9 @@ impl AppState {
             status_message: None,
             request_in_flight: false,
             cursor_pos: 0,
+            header_selected: 0,
+            header_editing: None,
+            header_edit_buf: String::new(),
         }
     }
 }

@@ -28,3 +28,6 @@ target
 # Storage and Db
 .torpor/
 *.db
+
+# Temp request files dont need to be in git
+request.yaml
