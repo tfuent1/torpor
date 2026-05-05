@@ -5,7 +5,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Tabs},
+    widgets::{Block, Borders, Paragraph},
 };
 
 /// Top-level render function. Called on every tick of the event loop.
@@ -49,8 +49,6 @@ fn render_request_pane(frame: &mut Frame, state: &AppState, area: ratatui::layou
         .split(area);
 
     let url_area = sections[0];
-    let tab_area = sections[1];
-    let content_area = sections[2];
 
     // URL bar
     let url_focused = state.focus == Focus::UrlBar;
@@ -67,11 +65,12 @@ fn render_request_pane(frame: &mut Frame, state: &AppState, area: ratatui::layou
     if url_focused {
         // x: 2 (left border) + method label + 3 chars for "[GET]  " prefix
         let method_prefix_len = method_label(&state.method).len() + 5; // "[" + method + "]  "
-        let cursor_x = url_area.x + method_prefix_len as u16 + state.cursor_pos as u16;
+        let cursor_x = url_area.x
+            + u16::try_from(method_prefix_len).unwrap_or(0)
+            + u16::try_from(state.cursor_pos).unwrap_or(0);
         let cursor_y = url_area.y + 1; // +1 to move inside the border
         frame.set_cursor_position((cursor_x, cursor_y));
     }
-
 
     // Tab Bar / Content
     let content_focused = state.focus == Focus::RequestPane;
@@ -81,7 +80,9 @@ fn render_request_pane(frame: &mut Frame, state: &AppState, area: ratatui::layou
         Span::styled(
             "Body",
             if state.active_tab == RequestTab::Body {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Indexed(240))
             },
@@ -90,7 +91,9 @@ fn render_request_pane(frame: &mut Frame, state: &AppState, area: ratatui::layou
         Span::styled(
             "Headers",
             if state.active_tab == RequestTab::Headers {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Indexed(240))
             },
@@ -147,7 +150,9 @@ fn render_response_pane(frame: &mut Frame, state: &AppState, area: ratatui::layo
         let status_line = Line::from(vec![
             Span::styled(
                 format!("{}", response.status),
-                Style::default().fg(status_color).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(status_color)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw(format!(
                 "  {}ms  {}b",
@@ -168,17 +173,26 @@ fn render_response_pane(frame: &mut Frame, state: &AppState, area: ratatui::layo
     frame.render_widget(content, area);
 }
 
-/// Renders the one-line status bar at the bottom of the screen.
+/// Renders the one-line status bar
 fn render_status_bar(frame: &mut Frame, state: &AppState, area: ratatui::layout::Rect) {
-    let message = state
-        .status_message
-        .as_deref()
-        .unwrap_or("ctrl+s save  ctrl+enter send  tab focus  q quit");
+    let message = if let Some(msg) = &state.status_message {
+        msg.clone()
+    } else {
+        match state.focus {
+            Focus::UrlBar => {
+                " ↑↓ method  ←→ cursor  tab focus  ctrl+enter send  ctrl+q quit".to_string()
+            }
+            Focus::RequestPane => {
+                " ←→ switch tab  tab focus  ctrl+enter send  ctrl+q quit".to_string()
+            }
+            Focus::ResponsePane => " tab focus  ctrl+enter send  q/ctrl+q quit".to_string(),
+        }
+    };
 
     let style = if state.status_message.is_some() {
         Style::default().fg(Color::Yellow)
     } else {
-        Style::default().fg(Color::DarkGray)
+        Style::default().fg(Color::Indexed(240))
     };
 
     let bar = Paragraph::new(message).style(style);

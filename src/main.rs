@@ -11,9 +11,7 @@ use anyhow::Context;
 use crossterm::{
     event::{self, Event, KeyCode, KeyModifiers},
     execute,
-    terminal::{
-        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
-    },
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
@@ -75,9 +73,7 @@ fn run(
         if let Event::Key(key) = event::read()? {
             match (key.modifiers, key.code) {
                 // Quit — only when not editing (UrlBar or RequestPane body)
-                (KeyModifiers::NONE, KeyCode::Char('q'))
-                    if state.focus == Focus::ResponsePane =>
-                {
+                (KeyModifiers::NONE, KeyCode::Char('q')) if state.focus == Focus::ResponsePane => {
                     break;
                 }
 
@@ -108,26 +104,18 @@ fn run(
                 }
 
                 // Method cycle when UrlBar focused - arrow keys only, no h/l
-                (KeyModifiers::NONE, KeyCode::Up)
-                    if state.focus == Focus::UrlBar =>
-                {
+                (KeyModifiers::NONE, KeyCode::Up) if state.focus == Focus::UrlBar => {
                     state.method = prev_method(&state.method);
                 }
-                (KeyModifiers::NONE, KeyCode::Down)
-                    if state.focus == Focus::UrlBar =>
-                {
+                (KeyModifiers::NONE, KeyCode::Down) if state.focus == Focus::UrlBar => {
                     state.method = next_method(&state.method);
                 }
 
                 // Cursor movement in URL bar
-                (KeyModifiers::NONE, KeyCode::Left)
-                    if state.focus == Focus::UrlBar =>
-                {
+                (KeyModifiers::NONE, KeyCode::Left) if state.focus == Focus::UrlBar => {
                     state.cursor_pos = state.cursor_pos.saturating_sub(1);
                 }
-                (KeyModifiers::NONE, KeyCode::Right)
-                    if state.focus == Focus::UrlBar =>
-                {
+                (KeyModifiers::NONE, KeyCode::Right) if state.focus == Focus::UrlBar => {
                     state.cursor_pos = (state.cursor_pos + 1).min(state.url.len());
                 }
 
@@ -139,9 +127,7 @@ fn run(
                     state.cursor_pos += 1;
                     state.status_message = None;
                 }
-                (KeyModifiers::NONE, KeyCode::Backspace)
-                    if state.focus == Focus::UrlBar =>
-                {
+                (KeyModifiers::NONE, KeyCode::Backspace) if state.focus == Focus::UrlBar => {
                     if state.cursor_pos > 0 {
                         state.url.remove(state.cursor_pos - 1);
                         state.cursor_pos -= 1;
@@ -149,14 +135,10 @@ fn run(
                 }
 
                 // Tab switching when RequestPane focused
-                (KeyModifiers::NONE, KeyCode::Left)
-                    if state.focus == Focus::RequestPane =>
-                {
+                (KeyModifiers::NONE, KeyCode::Left) if state.focus == Focus::RequestPane => {
                     state.active_tab = RequestTab::Body;
                 }
-                (KeyModifiers::NONE, KeyCode::Right)
-                    if state.focus == Focus::RequestPane =>
-                {
+                (KeyModifiers::NONE, KeyCode::Right) if state.focus == Focus::RequestPane => {
                     state.active_tab = RequestTab::Headers;
                 }
 
@@ -255,7 +237,7 @@ fn build_request(state: &AppState) -> Request {
 
 /// Advances to the next HTTP method in the cycle.
 fn next_method(method: &crate::models::request::HttpMethod) -> crate::models::request::HttpMethod {
-    use crate::models::request::HttpMethod::{Get, Post, Put, Patch, Delete, Head, Options};
+    use crate::models::request::HttpMethod::{Delete, Get, Head, Options, Patch, Post, Put};
     match method {
         Get => Post,
         Post => Put,
@@ -269,7 +251,7 @@ fn next_method(method: &crate::models::request::HttpMethod) -> crate::models::re
 
 /// Steps back to the previous HTTP method in the cycle.
 fn prev_method(method: &crate::models::request::HttpMethod) -> crate::models::request::HttpMethod {
-    use crate::models::request::HttpMethod::{Get, Post, Put, Patch, Delete, Head, Options};
+    use crate::models::request::HttpMethod::{Delete, Get, Head, Options, Patch, Post, Put};
     match method {
         Get => Options,
         Post => Get,

@@ -126,7 +126,11 @@ fn apply_auth(builder: reqwest::RequestBuilder, auth: &Auth) -> reqwest::Request
         Auth::None => builder,
         Auth::Bearer { token } => builder.bearer_auth(token),
         Auth::Basic { username, password } => builder.basic_auth(username, Some(password)),
-        Auth::ApiKey { key, value, location } => match location {
+        Auth::ApiKey {
+            key,
+            value,
+            location,
+        } => match location {
             ApiKeyLocation::Header => builder.header(key.as_str(), value.as_str()),
             ApiKeyLocation::Query => builder.query(&[(key.as_str(), value.as_str())]),
         },
