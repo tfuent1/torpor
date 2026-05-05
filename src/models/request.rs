@@ -3,6 +3,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(clippy::struct_field_names)]
 pub struct Request {
     pub name: String,
     pub description: Option<String>,
