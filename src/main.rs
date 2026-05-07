@@ -89,10 +89,14 @@ fn run(
                 (KeyModifiers::CONTROL, KeyCode::Char('q')) => break,
 
                 // Response scroll
-                (KeyModifiers::NONE, KeyCode::Char('j') | KeyCode::Down) if state.focus == Focus::ResponsePane => {
+                (KeyModifiers::NONE, KeyCode::Char('j') | KeyCode::Down)
+                    if state.focus == Focus::ResponsePane =>
+                {
                     state.response_scroll = state.response_scroll.saturating_add(1);
                 }
-                (KeyModifiers::NONE, KeyCode::Char('k') | KeyCode::Up) if state.focus == Focus::ResponsePane => {
+                (KeyModifiers::NONE, KeyCode::Char('k') | KeyCode::Up)
+                    if state.focus == Focus::ResponsePane =>
+                {
                     state.response_scroll = state.response_scroll.saturating_sub(1);
                 }
 
