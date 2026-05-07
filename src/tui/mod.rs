@@ -61,7 +61,9 @@ fn render_request_pane(frame: &mut Frame, state: &AppState, area: ratatui::layou
         Span::styled(
             "Body",
             if state.active_tab == RequestTab::Body {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Indexed(240))
             },
@@ -70,7 +72,9 @@ fn render_request_pane(frame: &mut Frame, state: &AppState, area: ratatui::layou
         Span::styled(
             "Headers",
             if state.active_tab == RequestTab::Headers {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Indexed(240))
             },
@@ -139,17 +143,27 @@ fn render_headers_editor(
     let key_col = cols[0];
     let val_col = cols[1];
 
-    let hdr_rect_k = ratatui::layout::Rect { height: 1, ..key_col };
-    let hdr_rect_v = ratatui::layout::Rect { height: 1, ..val_col };
+    let hdr_rect_k = ratatui::layout::Rect {
+        height: 1,
+        ..key_col
+    };
+    let hdr_rect_v = ratatui::layout::Rect {
+        height: 1,
+        ..val_col
+    };
     frame.render_widget(
         Paragraph::new("Key").style(
-            Style::default().fg(Color::Indexed(244)).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Indexed(244))
+                .add_modifier(Modifier::BOLD),
         ),
         hdr_rect_k,
     );
     frame.render_widget(
         Paragraph::new("Value").style(
-            Style::default().fg(Color::Indexed(244)).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Indexed(244))
+                .add_modifier(Modifier::BOLD),
         ),
         hdr_rect_v,
     );
@@ -164,18 +178,33 @@ fn render_headers_editor(
         }
 
         let is_selected = i == state.header_selected && state.focus == Focus::RequestPane;
-        let row_bg = if is_selected { Color::Indexed(236) } else { Color::Reset };
+        let row_bg = if is_selected {
+            Color::Indexed(236)
+        } else {
+            Color::Reset
+        };
 
         let editing_key = is_selected && state.header_editing == Some(HeaderField::Key);
         let editing_val = is_selected && state.header_editing == Some(HeaderField::Value);
 
-        let key_text = if editing_key { state.header_edit_buf.clone() } else { k.clone() };
-        let val_text = if editing_val { state.header_edit_buf.clone() } else { v.clone() };
+        let key_text = if editing_key {
+            state.header_edit_buf.clone()
+        } else {
+            k.clone()
+        };
+        let val_text = if editing_val {
+            state.header_edit_buf.clone()
+        } else {
+            v.clone()
+        };
 
         let key_style = if editing_key {
             Style::default().fg(Color::Yellow).bg(row_bg)
         } else if is_selected {
-            Style::default().fg(Color::White).bg(row_bg).add_modifier(Modifier::BOLD)
+            Style::default()
+                .fg(Color::White)
+                .bg(row_bg)
+                .add_modifier(Modifier::BOLD)
         } else {
             Style::default().fg(Color::Indexed(250)).bg(row_bg)
         };
@@ -188,8 +217,16 @@ fn render_headers_editor(
             Style::default().fg(Color::Indexed(244)).bg(row_bg)
         };
 
-        let k_rect = ratatui::layout::Rect { y: row_y, height: 1, ..key_col };
-        let v_rect = ratatui::layout::Rect { y: row_y, height: 1, ..val_col };
+        let k_rect = ratatui::layout::Rect {
+            y: row_y,
+            height: 1,
+            ..key_col
+        };
+        let v_rect = ratatui::layout::Rect {
+            y: row_y,
+            height: 1,
+            ..val_col
+        };
 
         frame.render_widget(Paragraph::new(key_text).style(key_style), k_rect);
         frame.render_widget(Paragraph::new(val_text).style(val_style), v_rect);
@@ -211,7 +248,12 @@ fn render_headers_editor(
     frame.render_widget(
         Paragraph::new("a add  d del  enter edit  ctrl+←→ switch tab")
             .style(Style::default().fg(Color::Indexed(238))),
-        ratatui::layout::Rect { x: inner.x, y: hint_y, width: inner.width, height: 1 },
+        ratatui::layout::Rect {
+            x: inner.x,
+            y: hint_y,
+            width: inner.width,
+            height: 1,
+        },
     );
 }
 
@@ -231,14 +273,21 @@ fn render_response_pane(frame: &mut Frame, state: &AppState, area: ratatui::layo
         let status_line = Line::from(vec![
             Span::styled(
                 format!("{}", response.status),
-                Style::default().fg(status_color).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(status_color)
+                    .add_modifier(Modifier::BOLD),
             ),
-            Span::raw(format!("  {}ms  {}b", response.duration_ms, response.size_bytes)),
+            Span::raw(format!(
+                "  {}ms  {}b",
+                response.duration_ms, response.size_bytes
+            )),
         ]);
 
         let mut lines = vec![status_line, Line::raw("")];
         lines.extend(highlight_json(&response.body));
-        Paragraph::new(lines).block(block).scroll((state.response_scroll, 0))
+        Paragraph::new(lines)
+            .block(block)
+            .scroll((state.response_scroll, 0))
     } else {
         Paragraph::new("No response yet")
             .style(Style::default().fg(Color::DarkGray))
@@ -268,11 +317,13 @@ fn colorize_json_line(line: &str) -> Line<'static> {
     {
         let key_end = colon_pos + 2;
         let key_part = trimmed[..key_end].to_string();
-        let rest = trimmed[key_end + 3..].trim_start().to_string();
+        let rest = trimmed[key_end + 1..].trim_start().to_string();
 
         spans.push(Span::styled(
             key_part,
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
         ));
         spans.push(Span::raw(" "));
         spans.extend(colorize_value(rest));
@@ -340,7 +391,11 @@ fn render_status_bar(frame: &mut Frame, state: &AppState, area: ratatui::layout:
 }
 
 fn focus_style(focused: bool) -> Style {
-    if focused { Style::default().fg(Color::Yellow) } else { Style::default().fg(Color::Indexed(240)) }
+    if focused {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default().fg(Color::Indexed(240))
+    }
 }
 
 fn status_color(status: u16) -> Color {
@@ -364,4 +419,3 @@ fn method_label(method: &HttpMethod) -> &'static str {
         HttpMethod::Options => "OPTIONS",
     }
 }
-

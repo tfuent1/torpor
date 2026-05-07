@@ -59,7 +59,7 @@ pub struct AppState {
     pub active_tab: RequestTab,
     pub status_message: Option<String>,
     pub request_in_flight: bool,
-    pub cursor_pos: usize,      // URL bar cursor
+    pub cursor_pos: usize, // URL bar cursor
     pub response_scroll: u16,
 
     // Headers editor state
@@ -112,9 +112,10 @@ impl AppState {
 
     /// Clamps the cursor to valid bounds. Call after any mutation.
     pub fn clamp_body_cursor(&mut self) {
-        self.body_cursor_row = self.body_cursor_row.min(self.body_lines.len().saturating_sub(1));
+        self.body_cursor_row = self
+            .body_cursor_row
+            .min(self.body_lines.len().saturating_sub(1));
         let line_len = self.body_lines[self.body_cursor_row].len();
         self.body_cursor_col = self.body_cursor_col.min(line_len);
     }
 }
-

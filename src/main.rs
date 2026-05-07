@@ -83,22 +83,16 @@ fn run(
 
             match (key.modifiers, key.code) {
                 // Quit
-                (KeyModifiers::NONE, KeyCode::Char('q'))
-                    if state.focus == Focus::ResponsePane =>
-                {
+                (KeyModifiers::NONE, KeyCode::Char('q')) if state.focus == Focus::ResponsePane => {
                     break;
                 }
                 (KeyModifiers::CONTROL, KeyCode::Char('q')) => break,
 
                 // Response scroll
-                (KeyModifiers::NONE, KeyCode::Char('j'))
-                    if state.focus == Focus::ResponsePane =>
-                {
+                (KeyModifiers::NONE, KeyCode::Char('j') | KeyCode::Down) if state.focus == Focus::ResponsePane => {
                     state.response_scroll = state.response_scroll.saturating_add(1);
                 }
-                (KeyModifiers::NONE, KeyCode::Char('k'))
-                    if state.focus == Focus::ResponsePane =>
-                {
+                (KeyModifiers::NONE, KeyCode::Char('k') | KeyCode::Up) if state.focus == Focus::ResponsePane => {
                     state.response_scroll = state.response_scroll.saturating_sub(1);
                 }
 
@@ -110,9 +104,7 @@ fn run(
                 (KeyModifiers::CONTROL, KeyCode::Char('o')) => handle_load(state),
 
                 // Clear URL bar
-                (KeyModifiers::CONTROL, KeyCode::Char('d'))
-                    if state.focus == Focus::UrlBar =>
-                {
+                (KeyModifiers::CONTROL, KeyCode::Char('d')) if state.focus == Focus::UrlBar => {
                     state.url.clear();
                     state.cursor_pos = 0;
                 }
@@ -134,10 +126,10 @@ fn run(
                 }
 
                 // --- URL bar ---
-                (KeyModifiers::NONE, KeyCode::Up) if state.focus == Focus::UrlBar => {
+                (KeyModifiers::CONTROL, KeyCode::Up) if state.focus == Focus::UrlBar => {
                     state.method = prev_method(&state.method);
                 }
-                (KeyModifiers::NONE, KeyCode::Down) if state.focus == Focus::UrlBar => {
+                (KeyModifiers::CONTROL, KeyCode::Down) if state.focus == Focus::UrlBar => {
                     state.method = next_method(&state.method);
                 }
                 (KeyModifiers::NONE, KeyCode::Left) if state.focus == Focus::UrlBar => {
@@ -187,8 +179,7 @@ fn run(
                     if state.focus == Focus::RequestPane
                         && state.active_tab == RequestTab::Headers =>
                 {
-                    if !state.headers.is_empty()
-                        && state.header_selected < state.headers.len() - 1
+                    if !state.headers.is_empty() && state.header_selected < state.headers.len() - 1
                     {
                         state.header_selected += 1;
                     }
@@ -208,9 +199,7 @@ fn run(
                         && !state.headers.is_empty() =>
                 {
                     state.headers.remove(state.header_selected);
-                    if state.header_selected > 0
-                        && state.header_selected >= state.headers.len()
-                    {
+                    if state.header_selected > 0 && state.header_selected >= state.headers.len() {
                         state.header_selected -= 1;
                     }
                 }
@@ -219,8 +208,7 @@ fn run(
                         && state.active_tab == RequestTab::Headers
                         && !state.headers.is_empty() =>
                 {
-                    state.header_edit_buf =
-                        state.headers[state.header_selected].0.clone();
+                    state.header_edit_buf = state.headers[state.header_selected].0.clone();
                     state.header_editing = Some(HeaderField::Key);
                 }
 
@@ -251,8 +239,7 @@ fn run(
                         state.body_cursor_col -= 1;
                     } else if state.body_cursor_row > 0 {
                         state.body_cursor_row -= 1;
-                        state.body_cursor_col =
-                            state.body_lines[state.body_cursor_row].len();
+                        state.body_cursor_col = state.body_lines[state.body_cursor_row].len();
                     }
                 }
                 (KeyModifiers::NONE, KeyCode::Right)
@@ -462,4 +449,3 @@ fn prev_method(method: &crate::models::request::HttpMethod) -> crate::models::re
         Options => Head,
     }
 }
-
