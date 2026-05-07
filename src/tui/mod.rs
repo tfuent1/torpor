@@ -288,6 +288,7 @@ fn render_response_pane(frame: &mut Frame, state: &AppState, area: ratatui::layo
         Paragraph::new(lines)
             .block(block)
             .scroll((state.response_scroll, 0))
+            .wrap(ratatui::widgets::Wrap { trim: false })
     } else {
         Paragraph::new("No response yet")
             .style(Style::default().fg(Color::DarkGray))
