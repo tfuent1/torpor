@@ -153,14 +153,12 @@ fn run(
                 }
 
                 // --- RequestPane tab switching: Ctrl+Left/Right and Ctrl+H/L ---
-                (KeyModifiers::CONTROL, KeyCode::Left)
-                | (KeyModifiers::CONTROL, KeyCode::Char('h'))
+                (KeyModifiers::CONTROL, KeyCode::Left | KeyCode::Char('h'))
                     if state.focus == Focus::RequestPane =>
                 {
                     state.active_tab = RequestTab::Body;
                 }
-                (KeyModifiers::CONTROL, KeyCode::Right)
-                | (KeyModifiers::CONTROL, KeyCode::Char('l'))
+                (KeyModifiers::CONTROL, KeyCode::Right | KeyCode::Char('l'))
                     if state.focus == Focus::RequestPane =>
                 {
                     state.active_tab = RequestTab::Headers;

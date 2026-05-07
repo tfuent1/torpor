@@ -99,7 +99,7 @@ impl AppState {
         self.body_lines.join("\n")
     }
 
-    /// Loads a body string into body_lines and resets cursor.
+    /// Loads a body string into `body_lines` and resets cursor.
     pub fn set_body_text(&mut self, text: &str) {
         self.body_lines = if text.is_empty() {
             vec![String::new()]
