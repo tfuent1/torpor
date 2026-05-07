@@ -1,0 +1,32 @@
+# Torpor user configuration
+# Location: ~/.config/torpor/config.toml
+#
+# This file is created automatically on first launch with these defaults.
+# Edit any value and relaunch to apply changes.
+# Theme can also be changed at runtime with Ctrl+T.
+#
+# Built-in themes: default-dark, nord, catppuccin-mocha, dracula, solarized-dark
+# Custom themes: create ~/.config/torpor/themes/<name>.toml (full Theme struct)
+theme = "default-dark"
+
+# Keybind overrides
+# Format: "modifier+key" — e.g. "ctrl+r", "shift+tab", "ctrl+shift+s", "q"
+# Multiple bindings per action are supported as an array.
+# Omit any action to keep its compiled-in default.
+
+[keybinds]
+quit           = ["ctrl+q", "q"]
+send_request   = ["ctrl+r"]
+save_request   = ["ctrl+s"]
+load_request   = ["ctrl+o"]
+focus_next     = ["tab"]
+focus_prev     = ["shift+tab"]
+method_next    = ["ctrl+down"]
+method_prev    = ["ctrl+up"]
+url_clear      = ["ctrl+d"]
+tab_body       = ["ctrl+left", "ctrl+h"]
+tab_headers    = ["ctrl+right", "ctrl+l"]
+header_add     = ["a"]
+header_delete  = ["d"]
+scroll_down    = ["j", "down"]
+scroll_up      = ["k", "up"]

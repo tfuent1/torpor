@@ -10,6 +10,7 @@ This directory contains Architecture Decision Records (ADRs) for Torpor. An ADR 
 | [ADR-002](ADR-002-rustls-over-openssl.md) | rustls over openssl for TLS | Accepted |
 | [ADR-003](ADR-003-sqlite-for-history.md) | SQLite for request history | Accepted |
 | [ADR-004](ADR-004-keyring-for-secrets.md) | System keyring for secret storage | Accepted |
+| [ADR-005](ADR-005-user-configuration.md) | User configuration system (keybinds & themes) | Accepted |
 
 ## ADR Format
 
