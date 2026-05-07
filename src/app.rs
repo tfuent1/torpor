@@ -61,6 +61,8 @@ pub struct AppState {
     pub request_in_flight: bool,
     pub cursor_pos: usize, // URL bar cursor
     pub response_scroll: u16,
+    pub theme_selector_open: bool,
+    pub theme_selector_index: usize,
 
     // Headers editor state
     pub header_selected: usize,
@@ -88,6 +90,8 @@ impl AppState {
             request_in_flight: false,
             cursor_pos: 0,
             response_scroll: 0,
+            theme_selector_open: false,
+            theme_selector_index: 0,
             header_selected: 0,
             header_editing: None,
             header_edit_buf: String::new(),

@@ -2,6 +2,7 @@ pub mod headers_editor;
 pub mod request_pane;
 pub mod response_pane;
 pub mod status_bar;
+pub mod theme_selector;
 pub mod url_bar;
 
 use crate::app::AppState;
@@ -30,4 +31,8 @@ pub fn render(frame: &mut Frame, state: &AppState, theme: &Theme) {
     request_pane::render(frame, state, panes[0], theme);
     response_pane::render(frame, state, panes[1], theme);
     status_bar::render(frame, state, outer[1], theme);
+
+    if state.theme_selector_open {
+        theme_selector::render(frame, state, theme);
+    }
 }

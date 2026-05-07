@@ -32,8 +32,8 @@ fn request_path() -> PathBuf {
 async fn main() -> anyhow::Result<()> {
     // Load or create default config
     Config::ensure_default().ok(); // non-fatal if config dir is unwritable
-    let config = Config::load().unwrap_or_default();
-    let theme = config.resolve_theme();
+    let mut config = Config::load().unwrap_or_default();
+    let mut theme = config.resolve_theme();
     let binds = config.keybinds.clone();
 
     enable_raw_mode().context("failed to enable raw mode")?;
@@ -45,7 +45,14 @@ async fn main() -> anyhow::Result<()> {
     let engine = RequestEngine::new().context("failed to create request engine")?;
     let mut state = AppState::new();
 
-    let result = run(&mut terminal, &mut state, &engine, &theme, &binds);
+    let result = run(
+        &mut terminal,
+        &mut state,
+        &engine,
+        &mut theme,
+        &mut config,
+        &binds,
+    );
 
     disable_raw_mode().ok();
     execute!(terminal.backend_mut(), LeaveAlternateScreen).ok();
@@ -58,7 +65,8 @@ fn run(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     state: &mut AppState,
     engine: &RequestEngine,
-    theme: &Theme,
+    theme: &mut Theme,
+    config: &mut Config,
     binds: &KeyBinds,
 ) -> anyhow::Result<()> {
     loop {
@@ -89,6 +97,7 @@ fn run(
                 Action::SendRequest => handle_send(state, engine),
                 Action::SaveRequest => handle_save(state),
                 Action::LoadRequest => handle_load(state),
+                Action::ApplyTheme(index) => handle_apply_theme(index, theme, config),
                 Action::Continue => {}
             }
         }
@@ -100,6 +109,15 @@ fn run(
 // ---------------------------------------------------------------------------
 // Request I/O helpers
 // ---------------------------------------------------------------------------
+
+fn handle_apply_theme(index: usize, theme: &mut Theme, config: &mut Config) {
+    let themes = crate::config::theme::all_builtin();
+    if let Some(selected) = themes.into_iter().nth(index) {
+        config.theme.clone_from(&selected.name);
+        *theme = selected;
+        config.save().ok();
+    }
+}
 
 fn handle_save(state: &mut AppState) {
     let request = build_request(state);

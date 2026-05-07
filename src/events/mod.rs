@@ -1,5 +1,6 @@
 pub mod request_pane;
 pub mod response_pane;
+pub mod theme_selector;
 pub mod url_bar;
 
 use crate::app::{AppState, Focus};
@@ -20,6 +21,8 @@ pub enum Action {
     SaveRequest,
     /// Load a request from disk.
     LoadRequest,
+    /// Apply a theme.
+    ApplyTheme(usize),
 }
 
 /// Dispatches a key event to the correct pane handler and returns an `Action`.
@@ -32,6 +35,22 @@ pub fn dispatch(
     code: KeyCode,
     binds: &KeyBinds,
 ) -> Action {
+    // Theme selector intercepts all keys when open
+    if state.theme_selector_open {
+        let consumed = theme_selector::handle(state, modifiers, code);
+        if !consumed {
+            // Enter was pressed — apply the selected theme
+            return Action::ApplyTheme(state.theme_selector_index);
+        }
+        return Action::Continue;
+    }
+
+    // Ctrl+T opens the theme selector from any focus
+    if modifiers == KeyModifiers::CONTROL && code == KeyCode::Char('t') {
+        state.theme_selector_open = true;
+        return Action::Continue;
+    }
+
     // --- Global actions ---
     if KeyBinds::any_match(&binds.quit, modifiers, code) {
         // `q` alone should still type in text input panes, not quit
