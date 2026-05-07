@@ -42,7 +42,10 @@ pub struct AppState {
     pub method: HttpMethod,
     pub url: String,
     pub headers: Vec<(String, String)>,
-    pub body: String,
+    /// Body stored as lines for cursor-aware editing.
+    pub body_lines: Vec<String>,
+    pub body_cursor_row: usize,
+    pub body_cursor_col: usize,
 
     // Last completed response
     pub response: Option<ResponseState>,
@@ -56,13 +59,13 @@ pub struct AppState {
     pub active_tab: RequestTab,
     pub status_message: Option<String>,
     pub request_in_flight: bool,
-    pub cursor_pos: usize,
+    pub cursor_pos: usize,      // URL bar cursor
     pub response_scroll: u16,
 
     // Headers editor state
-    pub header_selected: usize, // which row is selected (0-indexed)
-    pub header_editing: Option<HeaderField>, // None = navigating, Some = editing
-    pub header_edit_buf: String, // buffer for the field being typed into
+    pub header_selected: usize,
+    pub header_editing: Option<HeaderField>,
+    pub header_edit_buf: String,
 }
 
 impl AppState {
@@ -73,7 +76,9 @@ impl AppState {
             method: HttpMethod::Get,
             url: String::new(),
             headers: Vec::new(),
-            body: String::new(),
+            body_lines: vec![String::new()],
+            body_cursor_row: 0,
+            body_cursor_col: 0,
             response: None,
             response_tx,
             response_rx,
@@ -88,4 +93,28 @@ impl AppState {
             header_edit_buf: String::new(),
         }
     }
+
+    /// Returns the body as a single string for sending/saving.
+    pub fn body_text(&self) -> String {
+        self.body_lines.join("\n")
+    }
+
+    /// Loads a body string into body_lines and resets cursor.
+    pub fn set_body_text(&mut self, text: &str) {
+        self.body_lines = if text.is_empty() {
+            vec![String::new()]
+        } else {
+            text.split('\n').map(String::from).collect()
+        };
+        self.body_cursor_row = 0;
+        self.body_cursor_col = 0;
+    }
+
+    /// Clamps the cursor to valid bounds. Call after any mutation.
+    pub fn clamp_body_cursor(&mut self) {
+        self.body_cursor_row = self.body_cursor_row.min(self.body_lines.len().saturating_sub(1));
+        let line_len = self.body_lines[self.body_cursor_row].len();
+        self.body_cursor_col = self.body_cursor_col.min(line_len);
+    }
 }
+

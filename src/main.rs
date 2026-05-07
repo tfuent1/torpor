@@ -20,7 +20,6 @@ use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
 
-/// Fixed path for save/load in Phase 1.
 fn request_path() -> PathBuf {
     PathBuf::from("request.yaml")
 }
@@ -54,7 +53,6 @@ fn run(
     loop {
         terminal.draw(|frame| tui::render(frame, state))?;
 
-        // Non-blocking check for completed request
         if let Ok(result) = state.response_rx.try_recv() {
             state.request_in_flight = false;
             match result {
@@ -74,7 +72,7 @@ fn run(
         }
 
         if let Event::Key(key) = event::read()? {
-            // --- Headers editing mode swallows most keys ---
+            // Headers editing mode swallows most keys
             if state.focus == Focus::RequestPane
                 && state.active_tab == RequestTab::Headers
                 && state.header_editing.is_some()
@@ -85,50 +83,42 @@ fn run(
 
             match (key.modifiers, key.code) {
                 // Quit
-                (KeyModifiers::NONE, KeyCode::Char('q')) if state.focus == Focus::ResponsePane => {
+                (KeyModifiers::NONE, KeyCode::Char('q'))
+                    if state.focus == Focus::ResponsePane =>
+                {
                     break;
                 }
                 (KeyModifiers::CONTROL, KeyCode::Char('q')) => break,
 
-                // Down
+                // Response scroll
                 (KeyModifiers::NONE, KeyCode::Char('j'))
                     if state.focus == Focus::ResponsePane =>
                 {
                     state.response_scroll = state.response_scroll.saturating_add(1);
                 }
-
-                // Up
                 (KeyModifiers::NONE, KeyCode::Char('k'))
                     if state.focus == Focus::ResponsePane =>
                 {
                     state.response_scroll = state.response_scroll.saturating_sub(1);
                 }
 
-                // Send — Ctrl+R (Ctrl+Enter is unreliable in most terminals)
+                // Send
                 (KeyModifiers::CONTROL, KeyCode::Char('r')) => handle_send(state, engine),
 
-                // Save
+                // Save / Load
                 (KeyModifiers::CONTROL, KeyCode::Char('s')) => handle_save(state),
-
-                // Load
                 (KeyModifiers::CONTROL, KeyCode::Char('o')) => handle_load(state),
 
-                // Clear URL — Ctrl+D (readline kill-to-start)
-                (KeyModifiers::CONTROL, KeyCode::Char('d')) if state.focus == Focus::UrlBar => {
+                // Clear URL bar
+                (KeyModifiers::CONTROL, KeyCode::Char('d'))
+                    if state.focus == Focus::UrlBar =>
+                {
                     state.url.clear();
                     state.cursor_pos = 0;
                 }
 
                 // Tab / Shift+Tab cycle focus
                 (KeyModifiers::NONE, KeyCode::Tab) => {
-                    // If in headers navigation mode, Tab switches tab first
-                    if state.focus == Focus::RequestPane
-                        && state.active_tab == RequestTab::Headers
-                        && state.header_editing.is_none()
-                    {
-                        // Tab switches to Body tab first, then focus cycles
-                        // Actually: match the original behaviour — Tab cycles focus pane
-                    }
                     state.focus = match state.focus {
                         Focus::UrlBar => Focus::RequestPane,
                         Focus::RequestPane => Focus::ResponsePane,
@@ -143,23 +133,19 @@ fn run(
                     };
                 }
 
-                // Method cycle (UrlBar)
+                // --- URL bar ---
                 (KeyModifiers::NONE, KeyCode::Up) if state.focus == Focus::UrlBar => {
                     state.method = prev_method(&state.method);
                 }
                 (KeyModifiers::NONE, KeyCode::Down) if state.focus == Focus::UrlBar => {
                     state.method = next_method(&state.method);
                 }
-
-                // URL cursor
                 (KeyModifiers::NONE, KeyCode::Left) if state.focus == Focus::UrlBar => {
                     state.cursor_pos = state.cursor_pos.saturating_sub(1);
                 }
                 (KeyModifiers::NONE, KeyCode::Right) if state.focus == Focus::UrlBar => {
                     state.cursor_pos = (state.cursor_pos + 1).min(state.url.len());
                 }
-
-                // URL typing
                 (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c))
                     if state.focus == Focus::UrlBar =>
                 {
@@ -174,19 +160,21 @@ fn run(
                     }
                 }
 
-                // RequestPane: switch Body/Headers tab with ←→
-                (KeyModifiers::NONE, KeyCode::Left)
-                    if state.focus == Focus::RequestPane && state.header_editing.is_none() =>
+                // --- RequestPane tab switching: Ctrl+Left/Right and Ctrl+H/L ---
+                (KeyModifiers::CONTROL, KeyCode::Left)
+                | (KeyModifiers::CONTROL, KeyCode::Char('h'))
+                    if state.focus == Focus::RequestPane =>
                 {
                     state.active_tab = RequestTab::Body;
                 }
-                (KeyModifiers::NONE, KeyCode::Right)
-                    if state.focus == Focus::RequestPane && state.header_editing.is_none() =>
+                (KeyModifiers::CONTROL, KeyCode::Right)
+                | (KeyModifiers::CONTROL, KeyCode::Char('l'))
+                    if state.focus == Focus::RequestPane =>
                 {
                     state.active_tab = RequestTab::Headers;
                 }
 
-                // Headers navigation (↑↓ to select rows, enter to edit, a/d to add/delete)
+                // --- Headers tab navigation ---
                 (KeyModifiers::NONE, KeyCode::Up)
                     if state.focus == Focus::RequestPane
                         && state.active_tab == RequestTab::Headers =>
@@ -199,7 +187,8 @@ fn run(
                     if state.focus == Focus::RequestPane
                         && state.active_tab == RequestTab::Headers =>
                 {
-                    if !state.headers.is_empty() && state.header_selected < state.headers.len() - 1
+                    if !state.headers.is_empty()
+                        && state.header_selected < state.headers.len() - 1
                     {
                         state.header_selected += 1;
                     }
@@ -219,7 +208,9 @@ fn run(
                         && !state.headers.is_empty() =>
                 {
                     state.headers.remove(state.header_selected);
-                    if state.header_selected > 0 && state.header_selected >= state.headers.len() {
+                    if state.header_selected > 0
+                        && state.header_selected >= state.headers.len()
+                    {
                         state.header_selected -= 1;
                     }
                 }
@@ -228,29 +219,90 @@ fn run(
                         && state.active_tab == RequestTab::Headers
                         && !state.headers.is_empty() =>
                 {
-                    // Start editing the key of the selected row
-                    state.header_edit_buf = state.headers[state.header_selected].0.clone();
+                    state.header_edit_buf =
+                        state.headers[state.header_selected].0.clone();
                     state.header_editing = Some(HeaderField::Key);
                 }
 
-                // Body editing
-                (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c))
+                // --- Body tab ---
+                (KeyModifiers::NONE, KeyCode::Up)
                     if state.focus == Focus::RequestPane
                         && state.active_tab == RequestTab::Body =>
                 {
-                    state.body.push(c);
+                    if state.body_cursor_row > 0 {
+                        state.body_cursor_row -= 1;
+                        state.clamp_body_cursor();
+                    }
                 }
-                (KeyModifiers::NONE, KeyCode::Backspace)
+                (KeyModifiers::NONE, KeyCode::Down)
                     if state.focus == Focus::RequestPane
                         && state.active_tab == RequestTab::Body =>
                 {
-                    state.body.pop();
+                    if state.body_cursor_row < state.body_lines.len() - 1 {
+                        state.body_cursor_row += 1;
+                        state.clamp_body_cursor();
+                    }
+                }
+                (KeyModifiers::NONE, KeyCode::Left)
+                    if state.focus == Focus::RequestPane
+                        && state.active_tab == RequestTab::Body =>
+                {
+                    if state.body_cursor_col > 0 {
+                        state.body_cursor_col -= 1;
+                    } else if state.body_cursor_row > 0 {
+                        state.body_cursor_row -= 1;
+                        state.body_cursor_col =
+                            state.body_lines[state.body_cursor_row].len();
+                    }
+                }
+                (KeyModifiers::NONE, KeyCode::Right)
+                    if state.focus == Focus::RequestPane
+                        && state.active_tab == RequestTab::Body =>
+                {
+                    let line_len = state.body_lines[state.body_cursor_row].len();
+                    if state.body_cursor_col < line_len {
+                        state.body_cursor_col += 1;
+                    } else if state.body_cursor_row < state.body_lines.len() - 1 {
+                        state.body_cursor_row += 1;
+                        state.body_cursor_col = 0;
+                    }
                 }
                 (KeyModifiers::NONE, KeyCode::Enter)
                     if state.focus == Focus::RequestPane
                         && state.active_tab == RequestTab::Body =>
                 {
-                    state.body.push('\n');
+                    let row = state.body_cursor_row;
+                    let col = state.body_cursor_col;
+                    let rest = state.body_lines[row].split_off(col);
+                    state.body_lines.insert(row + 1, rest);
+                    state.body_cursor_row += 1;
+                    state.body_cursor_col = 0;
+                }
+                (KeyModifiers::NONE, KeyCode::Backspace)
+                    if state.focus == Focus::RequestPane
+                        && state.active_tab == RequestTab::Body =>
+                {
+                    let row = state.body_cursor_row;
+                    let col = state.body_cursor_col;
+                    if col > 0 {
+                        state.body_lines[row].remove(col - 1);
+                        state.body_cursor_col -= 1;
+                    } else if row > 0 {
+                        let current = state.body_lines.remove(row);
+                        let prev_len = state.body_lines[row - 1].len();
+                        state.body_lines[row - 1].push_str(&current);
+                        state.body_cursor_row -= 1;
+                        state.body_cursor_col = prev_len;
+                    }
+                }
+                (KeyModifiers::NONE | KeyModifiers::SHIFT, KeyCode::Char(c))
+                    if state.focus == Focus::RequestPane
+                        && state.active_tab == RequestTab::Body =>
+                {
+                    let row = state.body_cursor_row;
+                    let col = state.body_cursor_col;
+                    state.body_lines[row].insert(col, c);
+                    state.body_cursor_col += 1;
                 }
 
                 _ => {}
@@ -261,21 +313,17 @@ fn run(
     Ok(())
 }
 
-/// Handles keyboard input while a header field is being edited.
 fn handle_header_edit_key(state: &mut AppState, modifiers: KeyModifiers, code: KeyCode) {
     match (modifiers, code) {
         (KeyModifiers::NONE, KeyCode::Esc) => {
-            // Cancel — restore original value
             state.header_editing = None;
             state.header_edit_buf = String::new();
         }
         (KeyModifiers::NONE, KeyCode::Enter) => {
-            // Confirm current field, move to value (or finish)
             let i = state.header_selected;
             match &state.header_editing {
                 Some(HeaderField::Key) => {
                     state.headers[i].0 = state.header_edit_buf.clone();
-                    // Move to editing the value
                     state.header_edit_buf = state.headers[i].1.clone();
                     state.header_editing = Some(HeaderField::Value);
                 }
@@ -297,26 +345,21 @@ fn handle_header_edit_key(state: &mut AppState, modifiers: KeyModifiers, code: K
     }
 }
 
-/// Saves the current request to `request.yaml`.
 fn handle_save(state: &mut AppState) {
     let request = build_request(state);
     match storage::request::save(&request_path(), &request) {
-        Ok(()) => {
-            state.status_message = Some("Saved to request.yaml".to_string());
-        }
-        Err(e) => {
-            state.status_message = Some(format!("Save failed: {e}"));
-        }
+        Ok(()) => state.status_message = Some("Saved to request.yaml".to_string()),
+        Err(e) => state.status_message = Some(format!("Save failed: {e}")),
     }
 }
 
-/// Loads a request from `request.yaml` and populates state.
 fn handle_load(state: &mut AppState) {
     match storage::request::load(&request_path()) {
         Ok(request) => {
-            state.url = request.url;
+            state.url = request.url.clone();
             state.method = request.method;
-            state.body = request.body.map(|b| b.content).unwrap_or_default();
+            let body_text = request.body.map(|b| b.content).unwrap_or_default();
+            state.set_body_text(&body_text);
             state.headers = request
                 .headers
                 .map(|h| h.into_iter().collect())
@@ -327,9 +370,7 @@ fn handle_load(state: &mut AppState) {
             state.header_edit_buf = String::new();
             state.status_message = Some("Loaded from request.yaml".to_string());
         }
-        Err(e) => {
-            state.status_message = Some(format!("Load failed: {e}"));
-        }
+        Err(e) => state.status_message = Some(format!("Load failed: {e}")),
     }
 }
 
@@ -356,12 +397,13 @@ fn handle_send(state: &mut AppState, engine: &RequestEngine) {
 }
 
 fn build_request(state: &AppState) -> Request {
-    let body = if state.body.is_empty() {
+    let body_text = state.body_text();
+    let body = if body_text.trim().is_empty() {
         None
     } else {
         Some(Body {
             body_type: BodyType::Json,
-            content: state.body.clone(),
+            content: body_text,
         })
     };
 
@@ -420,3 +462,4 @@ fn prev_method(method: &crate::models::request::HttpMethod) -> crate::models::re
         Options => Head,
     }
 }
+
