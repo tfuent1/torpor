@@ -1,22 +1,23 @@
 # Roadmap
 
-## Phase 1 — Working Loop (Current)
-The goal of Phase 1 is to produce a TUI that a developer can actually use for day-to-day API work. Everything else is secondary to getting a tight request/response loop working.
+## Phase 1 — Working Loop ✓ Complete
+A tight request/response loop that a developer can use for day-to-day API work.
 
-**Deliverables:**
+**Delivered:**
 - Basic TUI layout with request builder and response viewer panes
-- All HTTP methods
-- Headers, query params, and JSON body editing
-- Send request and display response (status, headers, body)
-- Syntax highlighted JSON response
-- Save and load requests as YAML files
+- All HTTP methods, cycled with `Ctrl+↑` / `Ctrl+↓`
+- Full cursor-aware body editor with line splitting and merging
+- Headers editor with add, delete, and inline key/value editing
+- JSON syntax highlighting in response pane with scrolling
+- Save and load requests as YAML files (`Ctrl+S` / `Ctrl+O`)
+- Send via `Ctrl+R`
 
-**Definition of done:** A developer can replace Insomnia for basic GET/POST/PUT/PATCH/DELETE workflows.
+**Definition of done:** A developer can replace Insomnia for basic GET/POST/PUT/PATCH/DELETE workflows. ✓
 
 ---
 
 ## Phase 2 — Collections & Workspaces
-Organise requests into collections and workspaces. Enable the git-friendly sharing workflow.
+Organise requests into collections and workspaces. Enable the git-friendly team sharing workflow.
 
 **Deliverables:**
 - Workspace and collection file support

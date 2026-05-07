@@ -18,20 +18,28 @@ collections, environment variable management, request chaining, and assertions
 
 ## Status
 
-Early development. Phase 1 (basic request/response loop) is in progress.
-Not yet usable as a daily driver.
+Phase 1 (working request/response loop) is complete. Torpor can be used today
+for basic GET/POST/PUT/PATCH/DELETE workflows. Phase 2 (collections and
+workspaces) is next.
 
 See the [roadmap](docs/vision/roadmap.md) for what's planned.
 
-## Features (planned)
+## Features
 
 - Send HTTP requests from a keyboard-driven TUI
-- Save and organise requests as plain YAML files — git-friendly by design
+- Full cursor-aware JSON body editor
+- Headers editor with inline key/value editing
+- JSON syntax highlighting in the response pane with scrolling
+- Save and load requests as plain YAML files — git-friendly by design
+- Single binary, no runtime dependencies
+
+## Planned
+
+- Organise requests into collections and workspaces
 - Multiple environments (dev, staging, prod) with a single keybind to switch
 - Secrets stored in the system keyring, never committed to version control
 - Assert on status codes, response times, headers, and JSON fields
 - Chain requests — extract values from responses and use them in subsequent requests
-- Single binary, no runtime dependencies
 
 ## Installation
 
@@ -43,6 +51,32 @@ cd torpor
 cargo build --release
 ./target/release/torpor
 ```
+
+## Keybinds
+
+| Key | Context | Action |
+|-----|---------|--------|
+| `Tab` / `Shift+Tab` | Anywhere | Cycle focus forward / backward |
+| `Ctrl+R` | Anywhere | Send request |
+| `Ctrl+S` | Anywhere | Save request to `request.yaml` |
+| `Ctrl+O` | Anywhere | Load request from `request.yaml` |
+| `Ctrl+Q` | Anywhere | Quit |
+| `Ctrl+↑` / `Ctrl+↓` | URL bar focused | Cycle HTTP method |
+| `←` / `→` | URL bar focused | Move cursor |
+| `Ctrl+D` | URL bar focused | Clear URL |
+| `Ctrl+←` / `Ctrl+→` | Request pane focused | Switch Body / Headers tab |
+| `Ctrl+H` / `Ctrl+L` | Request pane focused | Switch Body / Headers tab (vim aliases) |
+| `↑` / `↓` / `←` / `→` | Body tab | Move cursor |
+| `Enter` | Body tab | Insert newline |
+| `Backspace` | Body tab | Delete character / merge lines |
+| `↑` / `↓` | Headers tab | Select row |
+| `a` | Headers tab | Add new header row |
+| `d` | Headers tab | Delete selected row |
+| `Enter` | Headers tab | Edit selected row |
+| `Esc` | Headers tab (editing) | Cancel edit |
+| `j` / `↓` | Response pane focused | Scroll down |
+| `k` / `↑` | Response pane focused | Scroll up |
+| `q` | Response pane focused | Quit |
 
 ## Documentation
 
