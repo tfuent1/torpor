@@ -11,14 +11,16 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    /// Name of the active theme. Must match a built-in theme name or a custom
-    /// theme file at `~/.config/torpor/themes/<name>.toml`.
     #[serde(default = "default_theme_name")]
     pub theme: String,
 
-    /// Keybind overrides. Any action not listed uses its compiled-in default.
     #[serde(default)]
     pub keybinds: KeyBinds,
+
+    /// Maps resolved root directory → last opened workspace file path.
+    /// Written on workspace open/switch; stale entries pruned on launch.
+    #[serde(default)]
+    pub workspace_history: std::collections::HashMap<String, String>,
 }
 
 fn default_theme_name() -> String {
@@ -30,6 +32,7 @@ impl Default for Config {
         Self {
             theme: default_theme_name(),
             keybinds: KeyBinds::default(),
+            workspace_history: std::collections::HashMap::new(),
         }
     }
 }

@@ -1,5 +1,6 @@
 mod app;
 mod config;
+mod discovery;
 mod engine;
 mod events;
 mod models;
@@ -11,7 +12,9 @@ use crate::config::{Config, KeyBinds, Theme};
 use crate::engine::RequestEngine;
 use crate::events::Action;
 use crate::models::request::{Body, BodyType, Request};
+use crate::models::workspace::WorkspaceHandle;
 use anyhow::Context;
+use clap::{Parser, Subcommand};
 use crossterm::{
     event::{self, Event},
     execute,
@@ -24,18 +27,76 @@ use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
 
-fn request_path() -> PathBuf {
-    PathBuf::from("request.yaml")
+// ---------------------------------------------------------------------------
+// CLI
+// ---------------------------------------------------------------------------
+
+#[derive(Parser)]
+#[command(name = "torpor", about = "Keyboard-driven TUI REST API client")]
+struct Cli {
+    /// Path to run discovery from (defaults to current directory).
+    path: Option<PathBuf>,
+
+    #[command(subcommand)]
+    command: Option<Command>,
 }
+
+#[derive(Subcommand)]
+enum Command {
+    /// Scan for workspaces and always show the picker (unbounded scan).
+    Find {
+        /// Path to scan from (defaults to current directory).
+        path: Option<PathBuf>,
+    },
+}
+
+// ---------------------------------------------------------------------------
+// Entry point
+// ---------------------------------------------------------------------------
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Load or create default config
-    Config::ensure_default().ok(); // non-fatal if config dir is unwritable
+    let cli = Cli::parse();
+
+    Config::ensure_default().ok();
     let mut config = Config::load().unwrap_or_default();
+
+    // Prune stale workspace_history entries silently on every launch.
+    if discovery::prune_history(&mut config) {
+        config.save().ok();
+    }
+
+    // Resolve the root directory for discovery.
+    let cwd = std::env::current_dir().context("failed to get current directory")?;
+
+    // Run discovery / CLI subcommands *before* entering raw mode so any
+    // terminal prompts work with normal line-buffered I/O.
+    let handle = match cli.command {
+        Some(Command::Find { path }) => {
+            let root = path.unwrap_or(cwd);
+            match discovery::run_find(&root, &mut config)? {
+                Some(h) => h,
+                None => return Ok(()), // user chose not to create; exit cleanly
+            }
+        }
+        None => {
+            let root = cli.path.unwrap_or(cwd);
+            match discovery::discover(&root, &config) {
+                discovery::DiscoveryResult::Found(h) => h,
+                discovery::DiscoveryResult::Multiple(_paths) => {
+                    // TODO(chunk-4): show in-app workspace picker overlay
+                    // For now, fall back to in-memory until the TUI picker exists
+                    WorkspaceHandle::in_memory()
+                }
+                discovery::DiscoveryResult::None => WorkspaceHandle::in_memory(),
+            }
+        }
+    };
+
     let mut theme = config.resolve_theme();
     let binds = config.keybinds.clone();
 
+    // Enter raw mode / alternate screen now that pre-TUI I/O is done.
     enable_raw_mode().context("failed to enable raw mode")?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen).context("failed to enter alternate screen")?;
@@ -43,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
     let mut terminal = Terminal::new(backend).context("failed to create terminal")?;
 
     let engine = RequestEngine::new().context("failed to create request engine")?;
-    let mut state = AppState::new();
+    let mut state = AppState::new(handle);
 
     let result = run(
         &mut terminal,
@@ -61,6 +122,10 @@ async fn main() -> anyhow::Result<()> {
     result
 }
 
+// ---------------------------------------------------------------------------
+// Main loop
+// ---------------------------------------------------------------------------
+
 fn run(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     state: &mut AppState,
@@ -72,7 +137,6 @@ fn run(
     loop {
         terminal.draw(|frame| tui::render(frame, state, theme))?;
 
-        // Poll for completed async requests
         if let Ok(result) = state.response_rx.try_recv() {
             state.request_in_flight = false;
             match result {
@@ -209,4 +273,8 @@ fn build_request(state: &AppState) -> Request {
         post_request: None,
         meta: None,
     }
+}
+
+fn request_path() -> PathBuf {
+    PathBuf::from("request.yaml")
 }

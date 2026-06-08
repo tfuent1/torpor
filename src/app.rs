@@ -1,4 +1,5 @@
 use crate::models::request::HttpMethod;
+use crate::models::workspace::WorkspaceHandle;
 use tokio::sync::mpsc;
 
 /// The result type sent back through the async channel after a request completes.
@@ -68,11 +69,15 @@ pub struct AppState {
     pub header_selected: usize,
     pub header_editing: Option<HeaderField>,
     pub header_edit_buf: String,
+
+    /// The active workspace. Starts as an in-memory default if no workspace
+    /// was found on launch; path is set on first save.
+    pub workspace: WorkspaceHandle,
 }
 
 impl AppState {
     /// Creates a new `AppState` with sensible defaults.
-    pub fn new() -> Self {
+    pub fn new(workspace: WorkspaceHandle) -> Self {
         let (response_tx, response_rx) = mpsc::channel(1);
         Self {
             method: HttpMethod::Get,
@@ -95,6 +100,7 @@ impl AppState {
             header_selected: 0,
             header_editing: None,
             header_edit_buf: String::new(),
+            workspace,
         }
     }
 
