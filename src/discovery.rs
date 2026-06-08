@@ -214,3 +214,9 @@ fn load_name(path: &Path) -> Option<String> {
     let ws = crate::storage::workspace::load(path).ok()?;
     Some(ws.name).filter(|n| !n.is_empty())
 }
+
+/// Public wrapper around the depth-limited subdirectory scan.
+/// Used by the in-app workspace picker to populate its list.
+pub fn scan_subdir_pub(root: &Path) -> Vec<PathBuf> {
+    scan_subdir(root, SUBDIR_SCAN_DEPTH)
+}

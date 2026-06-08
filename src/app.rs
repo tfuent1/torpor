@@ -39,6 +39,7 @@ pub enum HeaderField {
 }
 
 /// Central application state. The TUI reads from this; all mutations go through it.
+#[allow(clippy::struct_excessive_bools)]
 pub struct AppState {
     // Request being built
     pub method: HttpMethod,
@@ -70,6 +71,13 @@ pub struct AppState {
     pub sidebar_open: bool,
     /// Which tree item is highlighted in the sidebar (flat index).
     pub sidebar_selected: usize,
+
+    /// Whether the workspace picker overlay is open.
+    pub workspace_picker_open: bool,
+    /// Workspaces found by the last picker scan (paths to *.wksp.yaml).
+    pub workspace_picker_items: Vec<std::path::PathBuf>,
+    /// Which item is highlighted in the workspace picker.
+    pub workspace_picker_selected: usize,
 
     // Headers editor state
     pub header_selected: usize,
@@ -109,6 +117,9 @@ impl AppState {
             workspace,
             sidebar_open: true,
             sidebar_selected: 0,
+            workspace_picker_open: false,
+            workspace_picker_items: Vec::new(),
+            workspace_picker_selected: 0,
         }
     }
 

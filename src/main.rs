@@ -84,8 +84,7 @@ async fn main() -> anyhow::Result<()> {
             match discovery::discover(&root, &config) {
                 discovery::DiscoveryResult::Found(h) => h,
                 discovery::DiscoveryResult::Multiple(_paths) => {
-                    // TODO(chunk-4): show in-app workspace picker overlay
-                    // For now, fall back to in-memory until the TUI picker exists
+                    // Multiple workspaces found; user can switch via Ctrl+W picker
                     WorkspaceHandle::in_memory()
                 }
                 discovery::DiscoveryResult::None => WorkspaceHandle::in_memory(),
@@ -163,6 +162,7 @@ fn run(
                 Action::LoadRequest => handle_load(state),
                 Action::ApplyTheme(index) => handle_apply_theme(index, theme, config),
                 Action::Continue => {}
+                Action::SwitchWorkspace(index) => handle_switch_workspace(state, config, index),
             }
         }
     }
@@ -180,6 +180,34 @@ fn handle_apply_theme(index: usize, theme: &mut Theme, config: &mut Config) {
         config.theme.clone_from(&selected.name);
         *theme = selected;
         config.save().ok();
+    }
+}
+
+fn handle_switch_workspace(state: &mut AppState, config: &mut Config, index: usize) {
+    let Some(path) = state.workspace_picker_items.get(index).cloned() else {
+        return;
+    };
+    match storage::workspace::load(&path) {
+        Ok(workspace) => {
+            let handle = WorkspaceHandle::from_path(workspace, path.clone());
+            // Update workspace_history so next launch reopens this one
+            if let Some(root) = handle.root() {
+                // The history key is the parent of the workspace root
+                // (the directory the user was in when they ran torpor)
+                let history_root = root.parent().unwrap_or(root);
+                discovery::record_history(config, history_root, &path);
+                config.save().ok();
+            }
+            state.workspace = handle;
+            state.sidebar_selected = 0;
+            state.status_message = Some(format!(
+                "Switched to workspace: {}",
+                state.workspace.workspace.name
+            ));
+        }
+        Err(e) => {
+            state.status_message = Some(format!("Failed to open workspace: {e}"));
+        }
     }
 }
 

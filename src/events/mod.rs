@@ -3,6 +3,7 @@ pub mod response_pane;
 pub mod sidebar;
 pub mod theme_selector;
 pub mod url_bar;
+pub mod workspace_picker;
 
 use crate::app::{AppState, Focus};
 use crate::config::KeyBinds;
@@ -24,6 +25,8 @@ pub enum Action {
     LoadRequest,
     /// Apply a theme.
     ApplyTheme(usize),
+    /// Switch to a workspace by index into `state.workspace_picker_items`.
+    SwitchWorkspace(usize),
 }
 
 /// Dispatches a key event to the correct pane handler and returns an `Action`.
@@ -46,9 +49,33 @@ pub fn dispatch(
         return Action::Continue;
     }
 
+    // Workspace picker intercepts all keys when open
+    if state.workspace_picker_open {
+        let consumed = workspace_picker::handle(state, modifiers, code);
+        if !consumed {
+            // Enter was pressed — apply the selection
+            return Action::SwitchWorkspace(state.workspace_picker_selected);
+        }
+        return Action::Continue;
+    }
+
     // Ctrl+T opens the theme selector from any focus
     if modifiers == KeyModifiers::CONTROL && code == KeyCode::Char('t') {
         state.theme_selector_open = true;
+        return Action::Continue;
+    }
+
+    // Ctrl+W opens the workspace picker
+    if modifiers == KeyModifiers::CONTROL && code == KeyCode::Char('w') {
+        // Run a bounded discovery scan from the workspace root (or cwd)
+        let root = state.workspace.root().map_or_else(
+            || std::env::current_dir().unwrap_or_default(),
+            |p| p.parent().unwrap_or(p).to_path_buf(),
+        );
+        let found = crate::discovery::scan_subdir_pub(&root);
+        state.workspace_picker_items = found;
+        state.workspace_picker_selected = 0;
+        state.workspace_picker_open = true;
         return Action::Continue;
     }
 

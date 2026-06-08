@@ -5,6 +5,7 @@ pub mod sidebar;
 pub mod status_bar;
 pub mod theme_selector;
 pub mod url_bar;
+pub mod workspace_picker;
 
 use crate::app::AppState;
 use crate::config::Theme;
@@ -53,5 +54,9 @@ pub fn render(frame: &mut Frame, state: &AppState, theme: &Theme) {
 
     if state.theme_selector_open {
         theme_selector::render(frame, state, theme);
+    }
+
+    if state.workspace_picker_open {
+        workspace_picker::render(frame, state, theme);
     }
 }
