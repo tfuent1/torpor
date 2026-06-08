@@ -276,17 +276,56 @@ fn build_request(state: &AppState) -> Request {
         })
     };
 
-    let headers = if state.headers.is_empty() {
+    // Start with request-level headers from the editor
+    let mut merged_headers: HashMap<String, String> = state
+        .headers
+        .iter()
+        .filter(|(k, _)| !k.is_empty())
+        .cloned()
+        .collect();
+
+    // Resolve the active collection (if any) for inheritance
+    let active_collection = state
+        .active_collection
+        .and_then(|i| state.loaded_collections.get(i));
+
+    // Merge collection-level headers underneath (request wins on conflict)
+    if let Some(col) = active_collection
+        && let Some(ref col_headers) = col.collection.headers
+    {
+        for (k, v) in col_headers {
+            merged_headers.entry(k.clone()).or_insert_with(|| v.clone());
+        }
+    }
+
+    let headers = if merged_headers.is_empty() {
         None
     } else {
-        Some(
-            state
-                .headers
-                .iter()
-                .filter(|(k, _)| !k.is_empty())
-                .cloned()
-                .collect::<HashMap<String, String>>(),
-        )
+        Some(merged_headers)
+    };
+
+    // Auth: request-level wins; fall back to collection-level
+    let auth = if state
+        .loaded_collections
+        .get(state.active_collection.unwrap_or(usize::MAX))
+        .is_some()
+    {
+        // We have an active collection — check if the current request
+        // defines its own auth. Since auth isn't yet editable in the TUI,
+        // the loaded request's auth field is authoritative.
+        let request_auth = state
+            .active_collection
+            .and_then(|ci| state.active_request.map(|ri| (ci, ri)))
+            .and_then(|(ci, ri)| state.loaded_collections.get(ci)?.requests.get(ri))
+            .and_then(|(_, req)| req.auth.clone());
+
+        if request_auth.is_some() {
+            request_auth
+        } else {
+            active_collection.and_then(|col| col.collection.auth.clone())
+        }
+    } else {
+        None
     };
 
     Request {
@@ -296,7 +335,7 @@ fn build_request(state: &AppState) -> Request {
         url: state.url.clone(),
         headers,
         params: None,
-        auth: None,
+        auth,
         body,
         assertions: None,
         extract: None,
