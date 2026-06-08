@@ -13,6 +13,5 @@ pub fn save(path: &Path, environment: &Environment) -> anyhow::Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(path, contents)?;
-    Ok(())
+    super::atomic_write(path, &contents)
 }
