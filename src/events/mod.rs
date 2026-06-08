@@ -1,5 +1,6 @@
 pub mod request_pane;
 pub mod response_pane;
+pub mod sidebar;
 pub mod theme_selector;
 pub mod url_bar;
 
@@ -71,18 +72,42 @@ pub fn dispatch(
         return Action::LoadRequest;
     }
 
+    // Ctrl+B toggles sidebar
+    if modifiers == KeyModifiers::CONTROL && code == KeyCode::Char('b') {
+        state.sidebar_open = !state.sidebar_open;
+        // If we just closed the sidebar while it was focused, move focus to URL bar
+        if !state.sidebar_open && state.focus == Focus::Sidebar {
+            state.focus = Focus::UrlBar;
+        }
+        return Action::Continue;
+    }
+
     // Focus cycling
     if KeyBinds::any_match(&binds.focus_next, modifiers, code) {
         state.focus = match state.focus {
+            Focus::Sidebar => Focus::UrlBar,
             Focus::UrlBar => Focus::RequestPane,
             Focus::RequestPane => Focus::ResponsePane,
-            Focus::ResponsePane => Focus::UrlBar,
+            Focus::ResponsePane => {
+                if state.sidebar_open {
+                    Focus::Sidebar
+                } else {
+                    Focus::UrlBar
+                }
+            }
         };
         return Action::Continue;
     }
     if KeyBinds::any_match(&binds.focus_prev, modifiers, code) {
         state.focus = match state.focus {
-            Focus::UrlBar => Focus::ResponsePane,
+            Focus::Sidebar => Focus::ResponsePane,
+            Focus::UrlBar => {
+                if state.sidebar_open {
+                    Focus::Sidebar
+                } else {
+                    Focus::ResponsePane
+                }
+            }
             Focus::RequestPane => Focus::UrlBar,
             Focus::ResponsePane => Focus::RequestPane,
         };
@@ -91,6 +116,9 @@ pub fn dispatch(
 
     // --- Pane-specific handlers ---
     match state.focus {
+        Focus::Sidebar => {
+            sidebar::handle(state, modifiers, code);
+        }
         Focus::UrlBar => {
             url_bar::handle(state, modifiers, code, binds);
         }
@@ -99,7 +127,6 @@ pub fn dispatch(
         }
         Focus::ResponsePane => {
             let consumed = response_pane::handle(state, modifiers, code, binds);
-            // `q` in the response pane always quits even when not remapped
             if !consumed && modifiers == KeyModifiers::NONE && code == KeyCode::Char('q') {
                 return Action::Quit;
             }

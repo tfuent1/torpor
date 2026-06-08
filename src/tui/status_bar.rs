@@ -24,6 +24,9 @@ fn resolve_message(state: &AppState) -> (String, bool) {
     }
 
     let hint = match &state.focus {
+        Focus::Sidebar => {
+            " ↑↓/jk navigate  ctrl+b hide sidebar  tab focus  ctrl+r send  ctrl+q quit"
+        }
         Focus::UrlBar => {
             " ↑↓ method  ←→ cursor  ctrl+r send  ctrl+d clear  ctrl+s save  ctrl+o load  ctrl+q quit"
         }

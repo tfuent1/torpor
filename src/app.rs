@@ -18,9 +18,10 @@ pub struct ResponseState {
 /// Which pane currently has keyboard focus.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Focus {
-    UrlBar,
     RequestPane,
     ResponsePane,
+    Sidebar,
+    UrlBar,
 }
 
 /// Which tab is active in the request editor.
@@ -65,6 +66,11 @@ pub struct AppState {
     pub theme_selector_open: bool,
     pub theme_selector_index: usize,
 
+    /// Whether the sidebar is visible.
+    pub sidebar_open: bool,
+    /// Which tree item is highlighted in the sidebar (flat index).
+    pub sidebar_selected: usize,
+
     // Headers editor state
     pub header_selected: usize,
     pub header_editing: Option<HeaderField>,
@@ -101,6 +107,8 @@ impl AppState {
             header_editing: None,
             header_edit_buf: String::new(),
             workspace,
+            sidebar_open: true,
+            sidebar_selected: 0,
         }
     }
 
