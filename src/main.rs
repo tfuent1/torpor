@@ -105,6 +105,8 @@ async fn main() -> anyhow::Result<()> {
     let engine = RequestEngine::new().context("failed to create request engine")?;
     let mut state = AppState::new(handle);
 
+    state.load_collections();
+
     let result = run(
         &mut terminal,
         &mut state,
@@ -199,6 +201,7 @@ fn handle_switch_workspace(state: &mut AppState, config: &mut Config, index: usi
                 config.save().ok();
             }
             state.workspace = handle;
+            state.load_collections();
             state.sidebar_selected = 0;
             state.status_message = Some(format!(
                 "Switched to workspace: {}",

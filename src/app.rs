@@ -1,4 +1,6 @@
+use crate::models::collection::Collection;
 use crate::models::request::HttpMethod;
+use crate::models::request::Request;
 use crate::models::workspace::WorkspaceHandle;
 use tokio::sync::mpsc;
 
@@ -36,6 +38,33 @@ pub enum RequestTab {
 pub enum HeaderField {
     Key,
     Value,
+}
+
+/// A collection loaded into memory, paired with its on-disk slug and requests.
+#[derive(Debug, Clone)]
+pub struct LoadedCollection {
+    /// Directory name under `collections/`, e.g. `"users"`.
+    pub slug: String,
+    /// Parsed collection descriptor.
+    pub collection: Collection,
+    /// Requests in display order: `(filename_without_ext, Request)`.
+    pub requests: Vec<(String, Request)>,
+}
+
+/// Tracks what operation is waiting for user input from the sidebar prompt.
+#[derive(Debug, Clone)]
+pub enum PendingAction {
+    NewCollection,
+    NewRequest(usize),           // col_idx
+    RenameCollection(usize),     // col_idx
+    RenameRequest(usize, usize), // col_idx, req_idx
+}
+
+/// Tracks what deletion is waiting for confirmation.
+#[derive(Debug, Clone)]
+pub enum PendingDelete {
+    Collection(usize),
+    Request(usize, usize), // col_idx, req_idx
 }
 
 /// Central application state. The TUI reads from this; all mutations go through it.
@@ -87,6 +116,23 @@ pub struct AppState {
     /// The active workspace. Starts as an in-memory default if no workspace
     /// was found on launch; path is set on first save.
     pub workspace: WorkspaceHandle,
+
+    /// Collections loaded from the active workspace.
+    pub loaded_collections: Vec<LoadedCollection>,
+    /// Index into `loaded_collections` for the highlighted/active collection.
+    pub active_collection: Option<usize>,
+    /// Index into the active collection's `requests` for the highlighted request.
+    pub active_request: Option<usize>,
+
+    /// When `Some`, a single-line input prompt is open (rename / new name).
+    /// Contains `(prompt_label, current_input)`.
+    pub input_prompt: Option<(String, String)>,
+    /// When `Some`, a yes/no confirmation prompt is open.
+    pub confirm_prompt: Option<String>,
+    /// Pending sidebar action waiting for input prompt completion.
+    pub pending_action: Option<PendingAction>,
+    /// Pending deletion waiting for confirmation.
+    pub pending_delete: Option<PendingDelete>,
 }
 
 impl AppState {
@@ -120,6 +166,13 @@ impl AppState {
             workspace_picker_open: false,
             workspace_picker_items: Vec::new(),
             workspace_picker_selected: 0,
+            loaded_collections: Vec::new(),
+            active_collection: None,
+            active_request: None,
+            input_prompt: None,
+            confirm_prompt: None,
+            pending_action: None,
+            pending_delete: None,
         }
     }
 
@@ -146,5 +199,90 @@ impl AppState {
             .min(self.body_lines.len().saturating_sub(1));
         let line_len = self.body_lines[self.body_cursor_row].len();
         self.body_cursor_col = self.body_cursor_col.min(line_len);
+    }
+
+    /// Scans the workspace's `collections/` directory and loads all
+    /// collections and their requests into `loaded_collections`.
+    /// Clears and repopulates on every call — call after any CRUD operation.
+    pub fn load_collections(&mut self) {
+        self.loaded_collections.clear();
+
+        let Some(collections_dir) = self.workspace.collections_dir() else {
+            return;
+        };
+        if !collections_dir.exists() {
+            return;
+        }
+
+        let mut entries: Vec<_> = match std::fs::read_dir(&collections_dir) {
+            Ok(e) => e.flatten().collect(),
+            Err(_) => return,
+        };
+        entries.sort_by_key(std::fs::DirEntry::file_name);
+
+        for entry in entries {
+            let col_dir = entry.path();
+            if !col_dir.is_dir() {
+                continue;
+            }
+            let slug = entry.file_name().to_string_lossy().to_string();
+            let col_path = col_dir.join("collection.yaml");
+            if !col_path.exists() {
+                continue;
+            }
+            let Ok(collection) = crate::storage::collection::load(&col_path) else {
+                continue;
+            };
+
+            // Load requests in order field, then alphabetical for unlisted ones
+            let mut requests = Vec::new();
+            let order = collection.order.clone().unwrap_or_default();
+
+            // First pass: ordered entries
+            for filename in &order {
+                let req_path = col_dir.join(filename);
+                if let Ok(req) = crate::storage::request::load(&req_path) {
+                    let stem = std::path::Path::new(filename)
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or(filename)
+                        .to_string();
+                    requests.push((stem, req));
+                }
+            }
+
+            // Second pass: any yaml files not in order list
+            if let Ok(req_entries) = std::fs::read_dir(&col_dir) {
+                let mut extras: Vec<_> = req_entries
+                    .flatten()
+                    .filter(|e| {
+                        let name = e.file_name().to_string_lossy().to_string();
+                        std::path::Path::new(&name)
+                            .extension()
+                            .is_some_and(|ext| ext.eq_ignore_ascii_case("yaml"))
+                            && name != "collection.yaml"
+                            && !order.contains(&name)
+                    })
+                    .collect();
+                extras.sort_by_key(std::fs::DirEntry::file_name);
+                for extra in extras {
+                    if let Ok(req) = crate::storage::request::load(&extra.path()) {
+                        let stem = extra
+                            .path()
+                            .file_stem()
+                            .and_then(|s| s.to_str())
+                            .unwrap_or_default()
+                            .to_string();
+                        requests.push((stem, req));
+                    }
+                }
+            }
+
+            self.loaded_collections.push(LoadedCollection {
+                slug,
+                collection,
+                requests,
+            });
+        }
     }
 }
